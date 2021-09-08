@@ -10,16 +10,65 @@
 		"Other"
 	],
 	"activationEvents": [
-		"onCommand:highlight-duplicates.helloWorld"
+		"onCommand:highlight-duplicates.toggleHighlightDuplicates",
+		"onCommand:highlight-duplicates.toggleSelectDuplicates",
+		"onCommand:highlight-duplicates.removeDuplicates"
 	],
 	"main": "./dist/extension.js",
 	"contributes": {
 		"commands": [
 			{
-				"command": "highlight-duplicates.helloWorld",
-				"title": "Hello World"
+				"command": "highlight-duplicates.toggleHighlightDuplicates",
+				"title": "Highlight Duplicates: Toggle Highlighting"
+			},
+			{
+				"command": "highlight-duplicates.toggleSelectDuplicates",
+				"title": "Highlight Duplicates: Select Duplicates"
+			},
+			{
+				"command": "highlight-duplicates.removeDuplicates",
+				"title": "Highlight Duplicates: Remove Duplicates"
 			}
-		]
+		],
+		"configuration": {
+			"properties": {
+				"highlightDuplicates.highlight_duplicates_color": {
+					"type": "string",
+					"default": "red",
+					"description": ""
+				},
+				"highlightDuplicates.highlight_duplicates_enabled": {
+					"type": "boolean",
+					"default": true,
+					"description": ""
+				},
+				"highlightDuplicates.trim_white_space": {
+					"type": "boolean",
+					"default": true,
+					"description": ""
+				},
+				"highlightDuplicates.ignore_case": {
+					"type": "boolean",
+					"default": false,
+					"description": ""
+				},
+				"highlightDuplicates.min_line_length": {
+					"type": "integer",
+					"default": 1,
+					"description": ""
+				},
+				"highlightDuplicates.min_duplicate_count": {
+					"type": "integer",
+					"default": 1,
+					"description": ""
+				},
+				"highlightDuplicates.ignore_list": {
+					"type": "array",
+					"default": [],
+					"description": ""
+				}
+			}
+		}
 	},
 	"scripts": {
 		"vscode:prepublish": "npm run package",
