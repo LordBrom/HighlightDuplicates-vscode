@@ -17,8 +17,8 @@ type CountedLines = {
 };
 
 export function activate(context: vscode.ExtensionContext) {
-	let activeDecorations: Array<vscode.TextEditorDecorationType> = [];
 	let settings: Settings = getSettings();
+	let activeDecorations: Array<vscode.TextEditorDecorationType> = [];
 	let firstActive: boolean = true;
 
 	//Adding commands
@@ -35,12 +35,10 @@ export function activate(context: vscode.ExtensionContext) {
 		vscode.commands.registerCommand('highlight-duplicates.selectDuplicates', () => {
 			firstActive = false;
 			selectLines();
-			vscode.window.showInformationMessage('selectDuplicates() Not implemented');
 		}),
 		vscode.commands.registerCommand('highlight-duplicates.removeDuplicates', () => {
 			firstActive = false;
 			removeDuplicates();
-			vscode.window.showInformationMessage('removeDuplicates() Not implemented');
 		})
 	);
 
@@ -55,21 +53,21 @@ export function activate(context: vscode.ExtensionContext) {
 		try {
 			highlightLines();
 		} catch (error) {
-			console.error("Error from ' window.onDidChangeActiveTextEditor' -->", error);
+			console.error("Error from 'window.onDidChangeActiveTextEditor' -->", error);
 		}
 	});
 	vscode.workspace.onDidChangeTextDocument(() => {
 		try {
 			highlightLines();
 		} catch (error) {
-			console.error("Error from ' window.onDidChangeTextDocument' -->", error);
+			console.error("Error from 'window.onDidChangeTextDocument' -->", error);
 		}
 	});
 	vscode.window.onDidChangeTextEditorSelection(() => {
 		try {
 			highlightLines();
 		} catch (error) {
-			console.error("Error from ' window.onDidChangeTextDocument' -->", error);
+			console.error("Error from 'window.onDidChangeTextDocument' -->", error);
 		}
 	});
 
@@ -85,7 +83,9 @@ export function activate(context: vscode.ExtensionContext) {
 
 			if (updateAllVisibleEditors) {
 				vscode.window.visibleTextEditors.forEach((editor) => {
-					setDecorations(editor, countLines(editor.document.getText().split("\n")));
+					if (editor) {
+						setDecorations(editor, countLines(editor.document.getText().split("\n")));
+					}
 				});
 			} else {
 				vscode.window.visibleTextEditors.forEach((editor) => {
@@ -97,7 +97,7 @@ export function activate(context: vscode.ExtensionContext) {
 			}
 		}
 		catch (error) {
-			console.error("Error from ' highlightLines' -->", error);
+			console.error("Error from 'highlightLines' -->", error);
 		}
 	}
 
@@ -120,16 +120,26 @@ export function activate(context: vscode.ExtensionContext) {
 	}
 
 
-	//Command: toggleSelectDuplicates
+	//Command: selectDuplicates
 	function selectLines() {
 		try {
-			vscode.window.visibleTextEditors.forEach((editor) => {
-				if (editor !== vscode.window.activeTextEditor) {
-					return;
-				}
-			});
-		} catch (error) {
+			var editor = vscode.window.activeTextEditor;
 
+			if (editor?.document && editor?.selections) {
+				var countedLines: CountedLines = countLines(editor.document.getText().split("\n"));
+				var newSelections = [];
+
+				for (var i in countedLines) {
+					for (var line in countedLines[i]) {
+						var lineRange = editor.document.lineAt(countedLines[i][line]).range;
+						newSelections.push(new vscode.Selection(lineRange.start, lineRange.end));
+					}
+				}
+				editor.selections = newSelections;
+			}
+
+		} catch (error) {
+			console.error("Error from 'selectLines' -->", error);
 		}
 	}
 
@@ -137,14 +147,32 @@ export function activate(context: vscode.ExtensionContext) {
 	//Command: removeDuplicates
 	function removeDuplicates() {
 		try {
-			vscode.window.visibleTextEditors.forEach((editor) => {
-				if (editor !== vscode.window.activeTextEditor) {
-					return;
-				}
-			});
-		} catch (error) {
+			var editor = vscode.window.activeTextEditor;
 
+			if (editor?.document && editor?.selections) {
+				var countedLines: CountedLines = removeFirst(countLines(editor.document.getText().split("\n")));
+
+				editor.edit(builder => {
+					for (var i in countedLines) {
+						for (var l in countedLines[i]) {
+							if (editor) {
+								var lineRange = editor.document.lineAt(countedLines[i][l]).rangeIncludingLineBreak;
+								builder.delete(lineRange);
+							}
+						}
+					}
+				});
+			}
+		} catch (error) {
+			console.error("Error from 'removeDuplicates' -->", error);
 		}
+	}
+
+	function removeFirst(countedLines: CountedLines) {
+		for (var i in countedLines) {
+			countedLines[i].shift();
+		}
+		return countedLines;
 	}
 
 	//

@@ -11,7 +11,7 @@
 	],
 	"activationEvents": [
 		"onCommand:highlight-duplicates.toggleHighlightDuplicates",
-		"onCommand:highlight-duplicates.toggleSelectDuplicates",
+		"onCommand:highlight-duplicates.selectDuplicates",
 		"onCommand:highlight-duplicates.removeDuplicates"
 	],
 	"main": "./dist/extension.js",
