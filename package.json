@@ -22,7 +22,7 @@
 				"title": "Highlight Duplicates: Toggle Highlighting"
 			},
 			{
-				"command": "highlight-duplicates.toggleSelectDuplicates",
+				"command": "highlight-duplicates.selectDuplicates",
 				"title": "Highlight Duplicates: Select Duplicates"
 			},
 			{
@@ -32,6 +32,11 @@
 		],
 		"configuration": {
 			"properties": {
+				"highlightDuplicates.active": {
+					"type": "boolean",
+					"default": false,
+					"description": ""
+				},
 				"highlightDuplicates.borderWidth": {
 					"type": "string",
 					"default": "1px",
@@ -45,11 +50,6 @@
 				"highlightDuplicates.borderColor": {
 					"type": "string",
 					"default": "red",
-					"description": ""
-				},
-				"highlightDuplicates.highlightDuplicatesEnabled": {
-					"type": "boolean",
-					"default": true,
 					"description": ""
 				},
 				"highlightDuplicates.trimWhiteSpace": {
