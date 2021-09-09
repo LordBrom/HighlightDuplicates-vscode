@@ -1,15 +1,16 @@
 import * as vscode from 'vscode';
 
 type Settings = {
-	active: any;
-	borderWidth: any;
-	borderStyle: any;
-	borderColor: any;
-	trimWhiteSpace: any;
-	ignoreCase: any;
-	minLineLength: any;
-	minDuplicateCount: any;
-	ignoreList: any;
+	active: boolean;
+	borderWidth: string;
+	borderStyle: string;
+	borderColor: string;
+	trimWhiteSpace: boolean;
+	ignoreCase: boolean;
+	minLineLength: number;
+	minDuplicateCount: number;
+	ignoreList: Array<string>;
+	ignoreCaseForIgnoreList: boolean;
 };
 
 type CountedLines = {
@@ -21,7 +22,7 @@ export function activate(context: vscode.ExtensionContext) {
 	let activeDecorations: Array<vscode.TextEditorDecorationType> = [];
 	let firstActive: boolean = true;
 
-	//Adding commands
+	//Adds commands
 	context.subscriptions.push(
 		vscode.commands.registerCommand('highlight-duplicates.toggleHighlightDuplicates', () => {
 			if (firstActive) {
@@ -186,9 +187,10 @@ export function activate(context: vscode.ExtensionContext) {
 			if (line.trim().length < settings.minLineLength) {
 				continue;
 			}
-			if (settings.ignoreList.indexOf(line) !== -1) {
+			if (settings.ignoreList.indexOf(settings.ignoreCaseForIgnoreList ? line.trim().toLocaleLowerCase() : line.trim()) !== -1) {
 				continue;
 			}
+
 			if (settings.trimWhiteSpace) {
 				line = line.trim();
 			}
@@ -214,15 +216,22 @@ export function activate(context: vscode.ExtensionContext) {
 	function getSettings() {
 		const config = vscode.workspace.getConfiguration("highlightDuplicates");
 
-		const active = config.get("active");
-		const borderWidth = config.get("borderWidth");
-		const borderStyle = config.get("borderStyle");
-		const borderColor = config.get("borderColor");
-		const trimWhiteSpace = config.get("trimWhiteSpace");
-		const ignoreCase = config.get("ignoreCase");
-		const minLineLength = config.get("minLineLength");
-		const minDuplicateCount = config.get("minDuplicateCount");
-		const ignoreList = config.get("ignoreList");
+		const active: boolean = config.get("active", false);
+		const borderWidth: string = config.get("borderWidth", "1px");
+		const borderStyle: string = config.get("borderStyle", "solid");
+		const borderColor: string = config.get("borderColor", "red");
+		const trimWhiteSpace: boolean = config.get("trimWhiteSpace", true);
+		const ignoreCase: boolean = config.get("ignoreCase", false);
+		const minLineLength: number = config.get("minLineLength", 1);
+		const minDuplicateCount: number = config.get("minDuplicateCount", 1);
+		const ignoreList: Array<string> = config.get("ignoreList", []);
+		const ignoreCaseForIgnoreList: boolean = config.get("ignoreCaseForIgnoreList", true);
+
+		if (ignoreCaseForIgnoreList) {
+			for (var i in ignoreList) {
+				ignoreList[i] = ignoreList[i].toLocaleLowerCase();
+			}
+		}
 
 		const settings: Settings = {
 			active,
@@ -233,7 +242,8 @@ export function activate(context: vscode.ExtensionContext) {
 			ignoreCase,
 			minLineLength,
 			minDuplicateCount,
-			ignoreList
+			ignoreList,
+			ignoreCaseForIgnoreList
 		};
 
 		return settings;

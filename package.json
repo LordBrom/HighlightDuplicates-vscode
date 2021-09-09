@@ -76,6 +76,11 @@
 					"type": "array",
 					"default": [],
 					"description": ""
+				},
+				"highlightDuplicates.ignoreCaseForIgnoreList": {
+					"type": "boolean",
+					"default": true,
+					"description": ""
 				}
 			}
 		}
