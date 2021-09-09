@@ -2,10 +2,28 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
 
+type Settings = {
+	highlightDuplicatesColor: any;
+	highlightDuplicatesEnabled: any;
+	trimWhiteSpace: any;
+	ignoreCase: any;
+	minLineLength: any;
+	minDuplicateCount: any;
+	ignoreList: any;
+};
+
+type CountedLine = {
+	count: number;
+	lines: Array<number>;
+};
+type CountedLines = {
+	[index: string]: CountedLine;
+};
+
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
-	let activeEditor = vscode.window.activeTextEditor;
+	let activeDecorations: Array<vscode.TextEditorDecorationType> = [];
 
 
 	// Use the console to output diagnostic information (console.log) and errors (console.error)
@@ -25,68 +43,90 @@ export function activate(context: vscode.ExtensionContext) {
 		vscode.window.showInformationMessage('Hello World from Highlight Duplicates! removeDuplicates');
 	}));
 
+	vscode.workspace.onDidChangeConfiguration(() => {
+		highlightLines(true);
+	});
+
 	vscode.window.onDidChangeActiveTextEditor(() => {
-		//console.log(vscode.window.activeTextEditor?.getText());
-
 		try {
-
-			activeEditor = vscode.window.activeTextEditor;
+			highlightLines();
 		} catch (error) {
 			console.error("Error from ' window.onDidChangeActiveTextEditor' -->", error);
 		}
 	});
-
 	vscode.workspace.onDidChangeTextDocument((e: vscode.TextDocumentChangeEvent) => {
+		try {
+			highlightLines();
+		} catch (error) {
+			console.error("Error from ' window.onDidChangeTextDocument' -->", error);
+		}
+	});
+	vscode.window.onDidChangeTextEditorSelection(() => {
+		try {
+			highlightLines();
+		} catch (error) {
+			console.error("Error from ' window.onDidChangeTextDocument' -->", error);
+		}
+	});
+
+
+	function highlightLines(updateAllVisibleEditors = false) {
+
+		for (var d in activeDecorations){
+			activeDecorations[d].dispose();
+		}
+
 		try {
 			const settings = getSettings();
 
-			const countedLines = countLines(e.document.getText().split("\n"), settings);
-
-			for (var i in countedLines) {
-
-				if (countedLines[i].count <= settings['minDuplicateCount']) {
-					continue;
-				}
-
-				for (var p in countedLines[i].lines) {
-
-					var lineRange = vscode.window.activeTextEditor.document.lineAt(parseInt(countedLines[i].lines[p])).range;
-					var newDecoration = { range: new vscode.Range(lineRange.start, lineRange.end) };
-					vscode.window.activeTextEditor.setDecorations(getDecoration(), [newDecoration]);
-
-				}
-
+			if (updateAllVisibleEditors) {
+				vscode.window.visibleTextEditors.forEach((editor) => {
+					setDecorations(editor, settings);
+				});
 			}
 
-
-			//vscode.window.visibleTextEditors.forEach((editor) => {
-			//	if (editor !== vscode.window.activeTextEditor) {
-			//		return;
-			//	}
-
-			//	const currentPosition = editor.selection.active;
-			//	const isNewEditor = activeEditor.document.lineCount === 1;
-			//	const newDecoration = { range: new vscode.Range(currentPosition, currentPosition) };
-
-			//	if (isNewEditor) {
-			//		editor.setDecorations(getDecoration(), [newDecoration]);
-			//	}
-			//});
-
-
-			//activeEditor = vscode.window.activeTextEditor;
-		} catch (error) {
-			console.error("Error from ' window.onDidChangeActiveTextEditor' -->", error);
+			//edit only currently active editor
+			else {
+				vscode.window.visibleTextEditors.forEach((editor) => {
+					if (editor !== vscode.window.activeTextEditor) {
+						return;
+					}
+					setDecorations(editor, settings);
+				});
+			}
 		}
-	});
+		catch (error) {
+			console.error("Error from ' highlightLines' -->", error);
+		}
+	}
+
+	function setDecorations(editor: vscode.TextEditor, settings: Settings) {
+		const countedLines: CountedLines = countLines(editor.document.getText().split("\n"), settings);
+
+		for (var i in countedLines) {
+			if (countedLines[i].count <= settings['minDuplicateCount']) {
+				continue;
+			}
+
+			for (var p in countedLines[i].lines) {
+				if (vscode.window.activeTextEditor) {
+					var lineRange = vscode.window.activeTextEditor.document.lineAt(countedLines[i].lines[p]).range;
+					var newDecoration = { range: new vscode.Range(lineRange.start, lineRange.end) };
+					var decoration = getDecoration();
+					vscode.window.activeTextEditor.setDecorations(decoration, [newDecoration]);
+					activeDecorations.push(decoration);
+				}
+			}
+		}
+	}
 
 }
 
-function countLines(lines: Array<String>, settings = getSettings() ) {
-	var results = {};
+function countLines(lines: Array<string>, settings: Settings = getSettings() ): CountedLines {
+	var results: CountedLines = {};
 
 	for (var i in lines) {
-		var line = lines[i];
+		var line: string = lines[i];
 
 		if (line.length < settings['minLineLength']) {
 			continue;
@@ -102,11 +142,11 @@ function countLines(lines: Array<String>, settings = getSettings() ) {
 		}
 		if (line in results) {
 			results[line].count++;
-			results[line].lines.push(i);
+			results[line].lines.push(parseInt(i));
 		} else {
 			results[line] = {
 				count: 1,
-				lines: [i]
+				lines: [parseInt(i)]
 			};
 		}
 	}
@@ -117,15 +157,15 @@ function countLines(lines: Array<String>, settings = getSettings() ) {
 function getSettings() {
 	const config = vscode.workspace.getConfiguration("highlightDuplicates");
 
-	const highlightDuplicatesColor   = config.get("highlight_duplicates_color");
-	const highlightDuplicatesEnabled = config.get("highlight_duplicates_enabled");
-	const trimWhiteSpace             = config.get("trim_white_space");
-	const ignoreCase                 = config.get("ignore_case");
-	const minLineLength              = config.get("min_line_length");
-	const minDuplicateCount          = config.get("min_duplicate_count");
-	const ignoreList                 = config.get("ignore_list");
+	const highlightDuplicatesColor   = config.get("highlightDuplicatesColor");
+	const highlightDuplicatesEnabled = config.get("highlightDuplicatesEnabled");
+	const trimWhiteSpace             = config.get("trimWhiteSpace");
+	const ignoreCase                 = config.get("ignoreCase");
+	const minLineLength              = config.get("minLineLength");
+	const minDuplicateCount          = config.get("minDuplicateCount");
+	const ignoreList                 = config.get("ignoreList");
 
-	return {
+	const settings: Settings = {
 		highlightDuplicatesColor,
 		highlightDuplicatesEnabled,
 		trimWhiteSpace,
@@ -134,38 +174,26 @@ function getSettings() {
 		minDuplicateCount,
 		ignoreList
 	};
+
+	return settings;
 }
 
 function getDecoration() {
+	const config = vscode.workspace.getConfiguration("highlightDuplicates");
+
+	const borderWidth = config.get("borderWidth");
+	const borderStyle = config.get("borderStyle");
+	const borderColor = config.get("borderColor");
+
 	const decorationType = vscode.window.createTextEditorDecorationType({
-		isWholeLine: true,
-		borderWidth: `1px`,
-		borderStyle: `solid`,
-		borderColor: `red`
+		isWholeLine: false,
+		borderWidth: `${borderWidth}`,
+		borderStyle: `${borderStyle}`,
+		borderColor: `${borderColor}`,
 	});
+
 	return decorationType;
 }
 
 // this method is called when your extension is deactivated
 export function deactivate() {}
-
-
-
-//    private onDidChangeActiveTextEditor(e: vscode.TextEditor | undefined) {
-//	if (this.codeCounter_) {
-//		// log(`onDidChangeActiveTextEditor(${!e ? 'undefined' : e.document.uri})`);
-//		this.countLinesInEditor(e);
-//	}
-//}
-//    private onDidChangeTextEditorSelection(e: vscode.TextEditorSelectionChangeEvent) {
-//	if (this.codeCounter_) {
-//		// log(`onDidChangeTextEditorSelection(${e.selections.length}selections, ${e.selections[0].isEmpty} )`, e.selections[0]);
-//		this.countLinesInEditor(e.textEditor);
-//	}
-//}
-//    private onDidChangeTextDocument(e: vscode.TextDocumentChangeEvent) {
-//	if (this.codeCounter_) {
-//		// log(`onDidChangeTextDocument(${e.document.uri})`);
-//		this.countLinesOfFile(e.document);
-//	}
-//}

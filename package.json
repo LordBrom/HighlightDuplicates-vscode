@@ -32,37 +32,47 @@
 		],
 		"configuration": {
 			"properties": {
-				"highlightDuplicates.highlight_duplicates_color": {
+				"highlightDuplicates.borderWidth": {
+					"type": "string",
+					"default": "1px",
+					"description": ""
+				},
+				"highlightDuplicates.borderStyle": {
+					"type": "string",
+					"default": "solid",
+					"description": ""
+				},
+				"highlightDuplicates.borderColor": {
 					"type": "string",
 					"default": "red",
 					"description": ""
 				},
-				"highlightDuplicates.highlight_duplicates_enabled": {
+				"highlightDuplicates.highlightDuplicatesEnabled": {
 					"type": "boolean",
 					"default": true,
 					"description": ""
 				},
-				"highlightDuplicates.trim_white_space": {
+				"highlightDuplicates.trimWhiteSpace": {
 					"type": "boolean",
 					"default": true,
 					"description": ""
 				},
-				"highlightDuplicates.ignore_case": {
+				"highlightDuplicates.ignoreCase": {
 					"type": "boolean",
 					"default": false,
 					"description": ""
 				},
-				"highlightDuplicates.min_line_length": {
+				"highlightDuplicates.minLineLength": {
 					"type": "integer",
 					"default": 1,
 					"description": ""
 				},
-				"highlightDuplicates.min_duplicate_count": {
+				"highlightDuplicates.minDuplicateCount": {
 					"type": "integer",
 					"default": 1,
 					"description": ""
 				},
-				"highlightDuplicates.ignore_list": {
+				"highlightDuplicates.ignoreList": {
 					"type": "array",
 					"default": [],
 					"description": ""
