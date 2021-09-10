@@ -36,7 +36,7 @@ Would result in
 ## Options
 
 ### Border Width
-`borderWidth: "1px"`
+`borderWidth: 1px`
 
 The thickness of the outline, along with which side it actually shows can be adjusted with this setting. To make the outline just appear as an underline, change this to `0px 0px 1px 0px`
 
