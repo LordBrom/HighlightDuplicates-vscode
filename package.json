@@ -2,7 +2,7 @@
 	"name": "highlight-duplicates",
 	"displayName": "Highlight Duplicates",
 	"description": "Highlight duplicated lines (same as in Sublime Text 3)",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"engines": {
 		"vscode": "^1.60.0"
 	},
@@ -19,6 +19,7 @@
 		"type": "git",
 		"url": "https://github.com/LordBrom/HighlightDuplicates-vscode.git"
 	},
+	"icon": "preview.png",
 	"main": "./dist/extension.js",
 	"contributes": {
 		"commands": [

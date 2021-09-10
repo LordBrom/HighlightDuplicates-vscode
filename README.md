@@ -1,6 +1,7 @@
 # Highlight Duplicates
 
-**Highlight duplicated lines.**
+With this plugin you are able to have duplicate lines highlighted in the editor. The visibility, and style of the highlighting is customizable in the settings. You are also able to select all duplicate lines in a file, as well as remove duplicate lines leaving only 1 of each in the file.
+
 This is a vsCode plugin that is the same as the Sublime Text plugin by the same name.
 
 ## Commands
