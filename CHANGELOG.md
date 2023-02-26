@@ -11,5 +11,4 @@
 
 - Adding use selection option
   - Added option to use selected lines instead of the whole document.
-- Optimized highlighting a bit.
-  - Please create an issue if highlighting isn't changing when it should be.
+- Tried optimizing the highlighting a bit
