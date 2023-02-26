@@ -57,6 +57,7 @@ export function activate(context: vscode.ExtensionContext) {
 			if (changeEvent.document !== vscode.window.activeTextEditor?.document) {
 				return;
 			}
+
 			clearTimeout(timeoutHandler);
 			timeoutHandler = setTimeout(() => highlightLines(), 100);
 		} catch (error) {
@@ -73,6 +74,24 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 	});
 
+	//Selection change listener
+	//vscode.window.onDidChangeTextEditorSelection((changeEvent) => {
+	//	try {
+	//		if (!settings.useSelection) {
+	//			return;
+	//		}
+
+	//		if (changeEvent.textEditor !== vscode.window.activeTextEditor) {
+	//			return;
+	//		}
+
+	//		clearTimeout(timeoutHandler);
+	//		timeoutHandler = setTimeout(() => highlightLines(), 100);
+	//	} catch (error) {
+	//		console.error("Error from 'window.onDidChangeTextEditorSelection' -->", error);
+	//	}
+	//});
+
 	//Command: toggleHighlightDuplicates
 	function highlightLines(updateAllVisibleEditors = false) {
 		try {
@@ -83,20 +102,15 @@ export function activate(context: vscode.ExtensionContext) {
 				return;
 			}
 
-			if (updateAllVisibleEditors) {
-				vscode.window.visibleTextEditors.forEach((editor: vscode.TextEditor) => {
-					if (editor) {
-						setDecorations(editor, countLines(editor, false));
-					}
-				});
-			} else {
-				vscode.window.visibleTextEditors.forEach((editor: vscode.TextEditor) => {
-					if (editor !== vscode.window.activeTextEditor) {
-						return;
-					}
-					setDecorations(editor, countLines(editor, false));
-				});
-			}
+			vscode.window.visibleTextEditors.forEach((editor: vscode.TextEditor) => {
+				if (!editor) {
+					return;
+				}
+				if (!updateAllVisibleEditors && editor !== vscode.window.activeTextEditor) {
+					return;
+				}
+				setDecorations(editor, countLines(editor, false));
+			});
 		}
 		catch (error) {
 			console.error("Error from 'highlightLines' -->", error);
