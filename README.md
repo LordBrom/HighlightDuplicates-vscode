@@ -131,3 +131,10 @@ Lines matching entires in this list, will be ignored for all functions. Leading 
 `ignoreCaseForIgnoreList: true`
 
 Similar to "Ignore Case" except only applies when matching lines to the "Ignore List" setting.
+
+
+
+### Use Selection
+`useSelection: false`
+
+If set to true, the "Select Duplicate" and "Remove Duplicate" commands will only use lines that have selected content. If nothing is selected or the option is set to false, the entire document will be included.

@@ -11,6 +11,7 @@ type Settings = {
 	minDuplicateCount: number;
 	ignoreList: Array<string>;
 	ignoreCaseForIgnoreList: boolean;
+	useSelection: boolean;
 };
 
 type CountedLines = {
@@ -21,6 +22,7 @@ export function activate(context: vscode.ExtensionContext) {
 	let settings: Settings = getSettings();
 	let activeDecorations: Array<vscode.TextEditorDecorationType> = [];
 	let firstActive: boolean = true;
+	let timeoutHandler: any;
 
 	//Adds commands
 	context.subscriptions.push(
@@ -49,26 +51,25 @@ export function activate(context: vscode.ExtensionContext) {
 		highlightLines(true);
 	});
 
-	//Editor change listeners
+	//Document change listener, only listens for changes in active editor
+	vscode.workspace.onDidChangeTextDocument((changeEvent) => {
+		try {
+			if (changeEvent.document !== vscode.window.activeTextEditor?.document) {
+				return;
+			}
+			clearTimeout(timeoutHandler);
+			timeoutHandler = setTimeout(() => highlightLines(), 100);
+		} catch (error) {
+			console.error("Error from 'workspace.onDidChangeTextDocument' -->", error);
+		}
+	});
+
+	//Active window change listener
 	vscode.window.onDidChangeActiveTextEditor(() => {
 		try {
 			highlightLines();
 		} catch (error) {
 			console.error("Error from 'window.onDidChangeActiveTextEditor' -->", error);
-		}
-	});
-	vscode.workspace.onDidChangeTextDocument(() => {
-		try {
-			highlightLines();
-		} catch (error) {
-			console.error("Error from 'window.onDidChangeTextDocument' -->", error);
-		}
-	});
-	vscode.window.onDidChangeTextEditorSelection(() => {
-		try {
-			highlightLines();
-		} catch (error) {
-			console.error("Error from 'window.onDidChangeTextDocument' -->", error);
 		}
 	});
 
@@ -83,17 +84,17 @@ export function activate(context: vscode.ExtensionContext) {
 			}
 
 			if (updateAllVisibleEditors) {
-				vscode.window.visibleTextEditors.forEach((editor) => {
+				vscode.window.visibleTextEditors.forEach((editor: vscode.TextEditor) => {
 					if (editor) {
-						setDecorations(editor, countLines(editor.document.getText().split("\n")));
+						setDecorations(editor, countLines(editor, false));
 					}
 				});
 			} else {
-				vscode.window.visibleTextEditors.forEach((editor) => {
+				vscode.window.visibleTextEditors.forEach((editor: vscode.TextEditor) => {
 					if (editor !== vscode.window.activeTextEditor) {
 						return;
 					}
-					setDecorations(editor, countLines(editor.document.getText().split("\n")));
+					setDecorations(editor, countLines(editor, false));
 				});
 			}
 		}
@@ -127,7 +128,7 @@ export function activate(context: vscode.ExtensionContext) {
 			var editor = vscode.window.activeTextEditor;
 
 			if (editor?.document && editor?.selections) {
-				var countedLines: CountedLines = countLines(editor.document.getText().split("\n"));
+				var countedLines: CountedLines = countLines(editor);
 				var newSelections = [];
 
 				for (var i in countedLines) {
@@ -151,7 +152,7 @@ export function activate(context: vscode.ExtensionContext) {
 			var editor = vscode.window.activeTextEditor;
 
 			if (editor?.document && editor?.selections) {
-				var countedLines: CountedLines = removeFirst(countLines(editor.document.getText().split("\n")));
+				var countedLines: CountedLines = removeFirst(countLines(editor));
 
 				editor.edit(builder => {
 					for (var i in countedLines) {
@@ -176,19 +177,34 @@ export function activate(context: vscode.ExtensionContext) {
 		return countedLines;
 	}
 
+	function range(size: number, startAt: number = 0) {
+		return [...Array(size).keys()].map(i => i + startAt);
+	}
+
 	//
 
-	function countLines(lines: Array<string>): CountedLines {
+	function countLines(editor: vscode.TextEditor, useSelection: boolean = settings.useSelection): CountedLines {
 		var results: CountedLines = {};
+		var document = editor.document.getText().split("\n");
 
-		for (var i in lines) {
-			var line: string = lines[i];
+		var lines: number[] = [];
+		if (useSelection) {
+			editor.selections.forEach((selection) => {
+				lines = lines.concat(range((selection.end.line - selection.start.line) + 1, selection.start.line));
+			});
+		}
+		if (!useSelection || lines.length < 2) {
+			lines = [...Array(document.length).keys()];
+		}
+
+		lines.forEach((lineNumber) =>{
+			var line: string = document[lineNumber];
 
 			if (line.trim().length < settings.minLineLength) {
-				continue;
+				return;
 			}
 			if (settings.ignoreList.indexOf(settings.ignoreCaseForIgnoreList ? line.trim().toLocaleLowerCase() : line.trim()) !== -1) {
-				continue;
+				return;
 			}
 
 			if (settings.trimWhiteSpace) {
@@ -198,11 +214,11 @@ export function activate(context: vscode.ExtensionContext) {
 				line = line.toLocaleLowerCase();
 			}
 			if (line in results) {
-				results[line].push(parseInt(i));
+				results[line].push(lineNumber);
 			} else {
-				results[line] = [parseInt(i)];
+				results[line] = [lineNumber];
 			}
-		}
+		});
 
 		for (var l in results) {
 			if (results[l].length <= settings.minDuplicateCount) {
@@ -226,6 +242,8 @@ export function activate(context: vscode.ExtensionContext) {
 		const minDuplicateCount: number = config.get("minDuplicateCount", 1);
 		const ignoreList: Array<string> = config.get("ignoreList", []);
 		const ignoreCaseForIgnoreList: boolean = config.get("ignoreCaseForIgnoreList", true);
+		const useSelection: boolean = config.get("useSelection", false);
+
 
 		if (ignoreCaseForIgnoreList) {
 			for (var i in ignoreList) {
@@ -243,7 +261,8 @@ export function activate(context: vscode.ExtensionContext) {
 			minLineLength,
 			minDuplicateCount,
 			ignoreList,
-			ignoreCaseForIgnoreList
+			ignoreCaseForIgnoreList,
+			useSelection
 		};
 
 		return settings;
