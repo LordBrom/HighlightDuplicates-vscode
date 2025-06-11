@@ -12,3 +12,7 @@
 - Adding use selection option
   - Added option to use selected lines instead of the whole document.
 - Tried optimizing the highlighting a bit
+
+## [1.1.1]
+
+- Fixing issue with non-string values in the Ignore List setting.
