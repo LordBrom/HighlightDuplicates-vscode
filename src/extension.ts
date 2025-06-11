@@ -74,25 +74,6 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 	});
 
-	//Selection change listener
-	//vscode.window.onDidChangeTextEditorSelection((changeEvent) => {
-	//	try {
-	//		if (!settings.useSelection) {
-	//			return;
-	//		}
-
-	//		if (changeEvent.textEditor !== vscode.window.activeTextEditor) {
-	//			return;
-	//		}
-
-	//		clearTimeout(timeoutHandler);
-	//		timeoutHandler = setTimeout(() => highlightLines(), 100);
-	//	} catch (error) {
-	//		console.error("Error from 'window.onDidChangeTextEditorSelection' -->", error);
-	//	}
-	//});
-	/**/
-
 	//Command: toggleHighlightDuplicates
 	function highlightLines(updateAllVisibleEditors = false) {
 		vscode.window.visibleTextEditors.forEach((editor: vscode.TextEditor) => {
@@ -258,7 +239,7 @@ export function activate(context: vscode.ExtensionContext) {
 		const ignoreCase: boolean = config.get("ignoreCase", false);
 		const minLineLength: number = config.get("minLineLength", 1);
 		const minDuplicateCount: number = config.get("minDuplicateCount", 1);
-		const ignoreList: Array<string> = config.get("ignoreList", []);
+		const ignoreList: Array<string> = config.get("ignoreList", []).filter(value => typeof value === 'string');
 		const ignoreCaseForIgnoreList: boolean = config.get("ignoreCaseForIgnoreList", true);
 		const useSelection: boolean = config.get("useSelection", false);
 
